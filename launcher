@@ -366,8 +366,6 @@ run_bootstrap(){
 
   host_run
 
-  get_ssh_pub_key
-
   # Is the image available?
   # If not, pull it here so the user is aware what's happening.
   $docker_path history $image >/dev/null 2>&1 || $docker_path pull $image
