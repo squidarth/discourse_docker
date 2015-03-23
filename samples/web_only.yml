@@ -4,6 +4,7 @@
 templates:
   - "templates/sshd.template.yml"
   - "templates/web.template.yml"
+  - "templates/web.ratelimited.template.yml"
 
 expose:
   - "80:80"
@@ -50,6 +51,12 @@ volumes:
       host: /var/discourse/shared/web-only/log/var-log
       guest: /var/log
 
+#Use 'links' key to link containers together, aka use Docker --link flag.
+#links:
+#  - link:
+#      name: data
+#      alias: data
+
 ## The docker manager plugin allows you to one-click upgrade Discouse
 ## http://discourse.example.com/admin/docker
 hooks:
@@ -65,7 +72,6 @@ run:
   - exec: echo "Beginning of custom commands"
 
   ## If you want to configure password login for root, uncomment and change:
-  #- exec: apt-get -y install whois # for mkpasswd
   ## Use only one of the following lines:
   #- exec: /usr/sbin/usermod -p 'PASSWORD_HASH' root
   #- exec: /usr/sbin/usermod -p "$(mkpasswd -m sha-256 'RAW_PASSWORD')" root

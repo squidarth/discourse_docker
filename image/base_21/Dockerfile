@@ -26,7 +26,7 @@ RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections &&\
                        libxslt-dev libcurl4-openssl-dev \
                        libssl-dev libyaml-dev libtool \
                        libxml2-dev gawk \
-                       pngcrush imagemagick \
+                       pngcrush imagemagick gifsicle \
                        postgresql-9.3 postgresql-client-9.3 \
                        postgresql-contrib-9.3 libpq-dev libreadline-dev \
                        nginx language-pack-en sudo cron \
@@ -39,7 +39,6 @@ RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections &&\
     cd /src/ruby-build && ./install.sh &&\
     cd / && rm -rf /src/ruby-build &&\
     echo install_package "yaml-0.1.6" "http://pyyaml.org/download/libyaml/yaml-0.1.6.tar.gz#5fe00cda18ca5daeb43762b80c38e06e" --if needs_yaml > /src/2.1.2.discourse &&\
-    echo install_package "openssl-1.0.1g" "https://www.openssl.org/source/openssl-1.0.1g.tar.gz#de62b43dfcd858e66a74bee1c834e959" mac_openssl --if has_broken_mac_openssl >> /src/2.1.2.discourse &&\
     echo install_package "ruby-v_2_1_2_discourse" "https://github.com/SamSaffron/ruby/archive/v_2_1_2_discourse.tar.gz#98741e3cbfd00ae2931b2c0edb0f0698" ldflags_dirs standard verify_openssl >> /src/2.1.2.discourse &&\
     apt-get -y install ruby bison &&\
     ruby-build /src/2.1.2.discourse /usr/local &&\
@@ -49,7 +48,7 @@ RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections &&\
     cd / && git clone https://github.com/SamSaffron/pups.git &&\
     mkdir /jemalloc && cd /jemalloc &&\
       wget http://www.canonware.com/download/jemalloc/jemalloc-3.4.1.tar.bz2 &&\
-      tar -xvjf jemalloc-3.4.1.tar.bz2 && cd jemalloc-3.4.1 && ./configure && make &&\
+      tar -xjf jemalloc-3.4.1.tar.bz2 && cd jemalloc-3.4.1 && ./configure && make &&\
       mv lib/libjemalloc.so.1 /usr/lib && cd / && rm -rf /jemalloc &&\
     apt-get -y install runit monit socat &&\
     apt-get clean &&\
@@ -62,7 +61,7 @@ RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections &&\
       cp phantomjs-1.9.7-linux-x86_64/bin/phantomjs /bin/phantomjs &&\
       rm -fr phantomjs-1.9.7-linux-x86_64 &&\
     wget http://static.jonof.id.au/dl/kenutils/pngout-20130221-linux.tar.gz &&\
-      tar -xvf pngout-20130221-linux.tar.gz &&\
+      tar -xf pngout-20130221-linux.tar.gz &&\
       rm pngout-20130221-linux.tar.gz &&\
       cp pngout-20130221-linux/x86_64/pngout /bin/pngout &&\
       rm -rf pngout-20130221-linux

@@ -3,6 +3,8 @@ params:
   db_shared_buffers: "256MB"
   db_work_mem: "10MB"
   db_default_text_search_config: "pg_catalog.english"
+  db_name: discourse
+  db_user: discourse
 
 hooks:
   before_code:
@@ -20,6 +22,8 @@ run:
   - exec: socat /dev/null UNIX-CONNECT:/shared/postgres_run/.s.PGSQL.5432 || exit 0 && echo postgres already running stop container ; exit 1
   - exec: rm -fr /shared/postgres_run/.s*
   - exec: rm -fr /shared/postgres_run/*.pid
+  - exec: mkdir -p /shared/postgres_run/9.3-main.pg_stat_tmp
+  - exec: chown postgres:postgres /shared/postgres_run/9.3-main.pg_stat_tmp
   - file:
      path: /etc/service/postgres/run
      chmod: "+x"
@@ -27,6 +31,14 @@ run:
         #!/bin/sh
         exec 2>&1
         HOME=/var/lib/postgresql USER=postgres exec chpst -u postgres:postgres:ssl-cert -U postgres:postgres:ssl-cert /usr/lib/postgresql/9.3/bin/postmaster -D /etc/postgresql/9.3/main
+
+  - file:
+     path: /etc/runit/3.d/99-postgres
+     chmod: "+x"
+     contents: |
+       #!/bin/bash
+       sv stop postgres
+
   - file:
      path: /root/upgrade_postgres
      chmod: "+x"
@@ -63,7 +75,7 @@ run:
            echo
            echo Then destroy your container "./launcher destroy standalone"
            echo Undo the base_image and postgres.9.2 template from your container config
-           echo Run: "sudo mv /var/docker/shared/postgres_data /var/shared/postgres_data_old"
+           echo Run: "sudo mv /var/discourse/shared/postgres_data /var/shared/postgres_data_old"
            echo Run: "./launcher bootstrap"
            echo
            echo "Login to the blank site, and import your backup (remember to set the allow_restore site setting)"
@@ -98,12 +110,6 @@ run:
       filename: "/etc/postgresql/9.3/main/postgresql.conf"
       from: "data_directory = '/var/lib/postgresql/9.3/main'"
       to: "data_directory = '/shared/postgres_data'"
-
-  # listen on all interfaces
-  - replace:
-      filename: "/etc/postgresql/9.3/main/postgresql.conf"
-      from: /#?listen_addresses *=.*/
-      to: "listen_addresses = '*'"
 
   # listen on all interfaces
   - replace:
@@ -163,17 +169,26 @@ run:
 
   - exec:
       background: true
-      cmd: su - postgres -c '/usr/lib/postgresql/9.3/bin/postmaster -D /etc/postgresql/9.3/main'
+      # use fast shutdown for pg
+      stop_signal: INT
+      cmd: HOME=/var/lib/postgresql USER=postgres exec chpst -u postgres:postgres:ssl-cert -U postgres:postgres:ssl-cert /usr/lib/postgresql/9.3/bin/postmaster -D /etc/postgresql/9.3/main
 
   # give db a few secs to start up
   - exec: "sleep 5"
 
-  - exec: su postgres -c 'createdb discourse' || true
-  - exec: su postgres -c 'psql discourse -c "create user discourse;"' || true
-  - exec: su postgres -c 'psql discourse -c "grant all privileges on database discourse to discourse;"' || true
-  - exec: su postgres -c 'psql discourse -c "alter schema public owner to discourse;"'
-  - exec: su postgres -c 'psql discourse -c "create extension if not exists hstore;"'
-  - exec: su postgres -c 'psql discourse -c "create extension if not exists pg_trgm;"'
+  - exec: su postgres -c 'createdb $db_name' || true
+  - exec: su postgres -c 'psql $db_name -c "create user $db_user;"' || true
+  - exec: su postgres -c 'psql $db_name -c "grant all privileges on database $db_name to $db_user;"' || true
+  - exec: su postgres -c 'psql $db_name -c "alter schema public owner to $db_user;"'
+  - exec: su postgres -c 'psql template1 -c "create extension if not exists hstore;"'
+  - exec: su postgres -c 'psql template1 -c "create extension if not exists pg_trgm;"'
+  - exec: su postgres -c 'psql $db_name -c "create extension if not exists hstore;"'
+  - exec: su postgres -c 'psql $db_name -c "create extension if not exists pg_trgm;"'
+  - exec:
+      stdin: |
+        update pg_database set encoding = pg_char_to_encoding('UTF8') where datname = '$db_name' AND encoding = pg_encoding_to_char('SQL_ASCII');
+      cmd: sudo -u postgres psql $db_name
+      raise_on_fail: false
 
   - file:
      path: /var/lib/postgresql/take-database-backup

@@ -77,7 +77,7 @@ templates:
   - "templates/postgres.template.yml"
 ```
 
-This template is "composed" out of all these child templates, this allows for a very flexible configuration struture. Furthermore you may add specific hooks that extend the templates you reference.
+This template is "composed" out of all these child templates, this allows for a very flexible configuration structure. Furthermore you may add specific hooks that extend the templates you reference.
 
 #### expose:
 
@@ -87,7 +87,7 @@ expose:
   - "127.0.0.1:20080:80"
 ```
 
-Expose port 22 inside the container on port 2222 on ALL local host interfaces. In order to bind to only one interface, you may specify the host's IP address as `([<host_interface>:[host_port]])|(<host_port>):]<container_port>[/udp]` as defined in the [docker port binding documentation](http://docs.docker.io/en/latest/use/port_redirection/)
+Expose port 22 inside the container on port 2222 on ALL local host interfaces. In order to bind to only one interface, you may specify the host's IP address as `([<host_interface>:[host_port]])|(<host_port>):<container_port>[/udp]` as defined in the [docker port binding documentation](http://docs.docker.com/userguide/dockerlinks/)
 
 
 #### volumes:
@@ -95,12 +95,12 @@ Expose port 22 inside the container on port 2222 on ALL local host interfaces. I
 ```
 volumes:
   - volume:
-      host: /var/docker/shared
+      host: /var/discourse/shared
       guest: /shared
 
 ```
 
-Expose a directory inside the host inside the container.
+Expose a directory inside the host to the container.
 
 ### Upgrading Discourse
 
@@ -164,6 +164,8 @@ installs you can ensure they are in sync by looking at `/etc/passwd` and
 
 - [Setting up SSL with Discourse Docker](https://meta.discourse.org/t/allowing-ssl-for-your-discourse-docker-setup/13847)
 - [Multisite configuration with Docker](https://meta.discourse.org/t/multisite-configuration-with-docker/14084)
+- [Linking containers for a multiple container setup](https://meta.discourse.org/t/linking-containers-for-a-multiple-container-setup/20867)
+- [Replace rubygems.org with taobao mirror to resolve network error in China](https://meta.discourse.org/t/replace-rubygems-org-with-taobao-mirror-to-resolve-network-error-in-china/21988/1)
 
 License
 ===
